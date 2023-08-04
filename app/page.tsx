@@ -2,7 +2,7 @@
 import { useState } from 'react'
 //const { split: shamirSplit, join: shamirJoin } = require('shamir');
 
-const sleep = async (milliseconds) => {
+const sleep = async (milliseconds: number) => {
   await new Promise(resolve => {
     return setTimeout(resolve, milliseconds)
   });
@@ -12,11 +12,11 @@ export default function Home() {
   const [status, setStatus] = useState('')
   const [encryptionMessage, setEncryptionMessage] = useState('')
   const [origMsg, setOrigMsg] = useState("sample message")
-  const [key, setKey] = useState({})
+  const [key, setKey] = useState<any>({})
 
   const isCryptoAvailable = (typeof window.crypto.subtle !== 'undefined')
 
-  function encodeMessage(msg) {
+  function encodeMessage(msg: string) {
     let enc = new TextEncoder();
     return enc.encode(msg);
   }
@@ -75,7 +75,7 @@ export default function Home() {
         encodeMessage(origMsg)
       );
 
-    const decodedChiperText = window.btoa(cipherText)
+    //const decodedChiperText = window.btoa(cipherText)
     let decoder = new TextDecoder()
     msg += "\nencryption result: " + decoder.decode(cipherText)
 
@@ -94,9 +94,9 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="p-10 bg-blue-200 w-full max-w-5xl items-center justify-between font-mono text-sm ">
-        <h1 class="text-xl">WhisperBox</h1>
+        <h1 className="text-xl">WhisperBox</h1>
 
-        <p class="font-italic">Share secrets safely, easily</p>
+        <p className="font-italic">Share secrets safely, easily</p>
       </div>
 
       <article className="p-10 mt-5 bg-blue-200">
@@ -106,8 +106,8 @@ export default function Home() {
           status: { status }
         </p>
 
-        <pre class="bg-gray-200 p-4 overflow-x-scroll max-w-2xl">
-          key: { JSON.stringify(key, true, " ") }
+        <pre className="bg-gray-200 p-4 overflow-x-scroll max-w-2xl">
+          key: { JSON.stringify(key, null, 2) }
         </pre>
 
         <button
@@ -129,7 +129,7 @@ export default function Home() {
           />
         </div>
 
-        <pre class="bg-gray-200 p-4 overflow-x-scroll max-w-2xl">
+        <pre className="bg-gray-200 p-4 overflow-x-scroll max-w-2xl">
           Encryption Message:
           { encryptionMessage }
         </pre>
