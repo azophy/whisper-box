@@ -13,6 +13,7 @@ export default function Home() {
   const [encryptionMessage, setEncryptionMessage] = useState('')
   const [origMsg, setOrigMsg] = useState("sample message")
   const [key, setKey] = useState<any>({})
+  const [shards, setShards] = useState<any>({})
 
   const isCryptoAvailable = (typeof crypto.subtle !== 'undefined')
 
@@ -38,7 +39,14 @@ export default function Home() {
     const privateKey = await crypto.subtle.exportKey("jwk", res.privateKey);
     setKey({ publicKey, privateKey })
 
-    setStatus('done converting')
+    setStatus('splitting shards')
+
+    const utf8Encoder = new TextEncoder();
+    const secretBytes = utf8Encoder.encode(JSON.stringify(privateKey));
+    // parts is a map of part numbers to Uint8Array
+    const parts = shamirSplit(crypto.getRandomValues, 3, 2, secretBytes);
+    setShards(parts)
+    setStatus('splitting done')
   }
 
   const simulateEncryption = async () => {
@@ -116,6 +124,14 @@ export default function Home() {
           className="bg-blue-300 p-4 border rounded hover:bg-blue-500"
         >Generate Keys</button>
       </article>
+
+      <p>shards:</p>
+      {/*shards.map(i => (
+        <pre className="p-10 mt-5 bg-blue-200">
+        </pre>
+
+      ))*/}
+      { JSON.stringify(shards, null, 2) }
 
       <article className="p-10 mt-5 bg-blue-200">
         <div>
