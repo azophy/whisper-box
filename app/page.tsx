@@ -2,10 +2,23 @@
 import { useState } from 'react'
 const { split: shamirSplit, join: shamirJoin } = require('shamir');
 
+const encoder = new TextEncoder();
+const decoder = new TextDecoder()
+
 const sleep = async (milliseconds: number) => {
   await new Promise(resolve => {
     return setTimeout(resolve, milliseconds)
   });
+};
+
+// adapted from: https://gist.github.com/alexdiliberto/39a4ad0453310d0a69ce
+const getRandomBytes = function(n) {
+  const QUOTA = 65536
+  var a = new Uint8Array(n);
+  for (var i = 0; i < n; i += QUOTA) {
+    crypto.getRandomValues(a.subarray(i, i + Math.min(n - i, QUOTA)));
+  }
+  return a;
 };
 
 export default function Home() {
@@ -13,16 +26,12 @@ export default function Home() {
   const [encryptionMessage, setEncryptionMessage] = useState('')
   const [origMsg, setOrigMsg] = useState("sample message")
   const [key, setKey] = useState<any>({})
-  const [shards, setShards] = useState<any>({})
+  const [shards, setShards] = useState<any>([])
 
   const isCryptoAvailable = (typeof crypto.subtle !== 'undefined')
 
-  function encodeMessage(msg: string) {
-    let enc = new TextEncoder();
-    return enc.encode(msg);
-  }
-
   const generate = async () => {
+    setShards([])
     setStatus('generating...')
     const res = await crypto.subtle.generateKey(
       {
@@ -41,12 +50,19 @@ export default function Home() {
 
     setStatus('splitting shards')
 
-    const utf8Encoder = new TextEncoder();
-    const secretBytes = utf8Encoder.encode(JSON.stringify(privateKey));
-    // parts is a map of part numbers to Uint8Array
-    const parts = shamirSplit(crypto.getRandomValues, 3, 2, secretBytes);
-    setShards(parts)
+    const secretBytes = encoder.encode(JSON.stringify(privateKey));
+
+    const parts = shamirSplit(getRandomBytes, 3, 2, secretBytes);
+    console.log({ parts })
+    const partsAsArrays = Object.keys(parts).map(i => Array.from(parts[i])).map(JSON.stringify)
+    setShards(partsAsArrays)
     setStatus('splitting done')
+
+    console.log(partsAsArrays.map(JSON.parse))
+    const combinedParts = Object.assign({}, partsAsArrays.slice(0,2).map(JSON.parse).map(i => Uint8Array.from(i)))
+    console.log({ combinedParts })
+    const restoredSecret = decoder.decode(shamirJoin(combinedParts))
+    console.log({ restoredSecret })
   }
 
   const simulateEncryption = async () => {
@@ -80,11 +96,10 @@ export default function Home() {
           name: "RSA-OAEP",
         },
         publicKey,
-        encodeMessage(origMsg)
+        encoder.encode(origMsg)
       );
 
     //const decodedChiperText = btoa(cipherText)
-    let decoder = new TextDecoder()
     msg += "\nencryption result: " + decoder.decode(cipherText)
 
     setStatus('decrypting...')
@@ -126,12 +141,20 @@ export default function Home() {
       </article>
 
       <p>shards:</p>
-      {/*shards.map(i => (
-        <pre className="p-10 mt-5 bg-blue-200">
+      { shards.map(i => (
+        <pre className="p-10 mt-5 bg-gray-200 overflow-x-scroll max-w-2xl">
+          { i }
         </pre>
+      )) }
 
-      ))*/}
-      { JSON.stringify(shards, null, 2) }
+      <p>combined_shards:</p>
+      {/*
+        (shards.length <1) 
+          ? 'empty shards' 
+          : decoder.decode(shamirJoin(
+            Object.assign({}, shards.map(JSON.parse))
+          ))
+      */}
 
       <article className="p-10 mt-5 bg-blue-200">
         <div>
