@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-const { split: shamirSplit, join: shamirJoin } = require('shamir');
+//const { split: shamirSplit, join: shamirJoin } = require('shamir');
 
 const sleep = async (milliseconds) => {
   await new Promise(resolve => {
