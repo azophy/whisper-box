@@ -49,8 +49,10 @@ export default function Home() {
     setKey({ publicKey, privateKey })
 
     setStatus('splitting shards')
+    console.log({ privateKey })
 
-    const secretBytes = encoder.encode(JSON.stringify(privateKey));
+    //const secretBytes = encoder.encode(JSON.stringify(privateKey));
+    const secretBytes = encoder.encode('22222');
 
     const parts = shamirSplit(getRandomBytes, 3, 2, secretBytes);
     console.log({ parts })
@@ -59,7 +61,8 @@ export default function Home() {
     setStatus('splitting done')
 
     console.log(partsAsArrays.map(JSON.parse))
-    const combinedParts = Object.assign({}, partsAsArrays.slice(0,2).map(JSON.parse).map(i => Uint8Array.from(i)))
+    let combinedParts = {}
+    partsAsArrays.slice(1,3).map(JSON.parse).map(i => Uint8Array.from(i)).forEach((v,k) => combinedParts[k+1] = v)
     console.log({ combinedParts })
     const restoredSecret = decoder.decode(shamirJoin(combinedParts))
     console.log({ restoredSecret })
