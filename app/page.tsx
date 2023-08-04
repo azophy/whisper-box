@@ -14,7 +14,7 @@ export default function Home() {
   const [origMsg, setOrigMsg] = useState("sample message")
   const [key, setKey] = useState<any>({})
 
-  const isCryptoAvailable = (typeof window.crypto.subtle !== 'undefined')
+  const isCryptoAvailable = (typeof crypto.subtle !== 'undefined')
 
   function encodeMessage(msg: string) {
     let enc = new TextEncoder();
@@ -23,7 +23,7 @@ export default function Home() {
 
   const generate = async () => {
     setStatus('generating...')
-    const res = await window.crypto.subtle.generateKey(
+    const res = await crypto.subtle.generateKey(
       {
         name: "RSA-OAEP",
         modulusLength: 4096,
@@ -34,15 +34,15 @@ export default function Home() {
       ["encrypt", "decrypt"],
     );
     setStatus('converting...')
-    const publicKey = await window.crypto.subtle.exportKey("jwk", res.publicKey);
-    const privateKey = await window.crypto.subtle.exportKey("jwk", res.privateKey);
+    const publicKey = await crypto.subtle.exportKey("jwk", res.publicKey);
+    const privateKey = await crypto.subtle.exportKey("jwk", res.privateKey);
     setKey({ publicKey, privateKey })
 
     setStatus('done converting')
   }
 
   const simulateEncryption = async () => {
-    const publicKey = await window.crypto.subtle.importKey(
+    const publicKey = await crypto.subtle.importKey(
       "jwk",
       key.publicKey,
       {
@@ -53,7 +53,7 @@ export default function Home() {
       ["encrypt"],
     );
 
-    const privateKey = await window.crypto.subtle.importKey(
+    const privateKey = await crypto.subtle.importKey(
       "jwk",
       key.privateKey,
       {
@@ -67,7 +67,7 @@ export default function Home() {
     setStatus('encrypting...')
     let msg = `original Message: ${origMsg}`
 
-    const cipherText = await window.crypto.subtle.encrypt(
+    const cipherText = await crypto.subtle.encrypt(
         {
           name: "RSA-OAEP",
         },
@@ -75,13 +75,13 @@ export default function Home() {
         encodeMessage(origMsg)
       );
 
-    //const decodedChiperText = window.btoa(cipherText)
+    //const decodedChiperText = btoa(cipherText)
     let decoder = new TextDecoder()
     msg += "\nencryption result: " + decoder.decode(cipherText)
 
     setStatus('decrypting...')
     
-    const decryptRes = await window.crypto.subtle.decrypt(
+    const decryptRes = await crypto.subtle.decrypt(
       { name: "RSA-OAEP" },
       privateKey,
       cipherText,
