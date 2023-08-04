@@ -21,6 +21,11 @@ export default function Home() {
   const [key, setKey] = useState<any>({})
   const [shards, setShards] = useState<any>([])
 
+  const [passwords, setPasswords] = useState('')
+  const [decryptPasswords, setDecryptPasswords] = useState('')
+  const [numParts, setNumParts] = useState(3)
+  const [quorum, setQuorum] = useState(2)
+
   const isCryptoAvailable = (typeof crypto.subtle !== 'undefined')
 
   const generate = async () => {
@@ -31,13 +36,14 @@ export default function Home() {
     setKey({ publicKey, privateKey })
 
     setStatus('splitting shards')
-    console.log({ privateKey })
+    console.log({ privateKey, numParts, quorum })
 
-    const parts = shamir.split(privateKey, 3, 2);
+    const parts = shamir.split(privateKey, Number(numParts), Number(quorum));
     const encodedParts = shamir.encodeParts(parts)
     console.log({ encodedParts })
+    const splittedPasswords = passwords.split(',')
     const encryptedParts = await Promise.all(encodedParts.map(async(item) => {
-      const enc = await encryptData(JSON.stringify(item.data), 'password')
+      const enc = await encryptData(JSON.stringify(item.data), splittedPasswords[item.index-1])
       return {
         index: item.index,
         encryptedData: enc,
@@ -47,31 +53,53 @@ export default function Home() {
     setShards(JSON.stringify(encodedParts, null, 2))
     setStatus('splitting done')
 
-    //const immediateParts = {
-      //3: parts[3],
-      //1: parts[1],
-    //}
-    //console.log({ immediateParts })
-    //const immediateResult = (decoder.decode(shamirJoin(immediateParts)))
-    //console.log({ immediateResult })
+    let splittedDecryptPasswords = decryptPasswords.split(',')
+    if (splittedDecryptPasswords.length < quorum) {
+      console.log('number of decrypt password is less than required')
+      return
+    }
 
-    const decryptedParts = await Promise.all(encryptedParts.map(async(item) => {
-      const enc = await decryptData(item.encryptedData, 'password')
-      return {
-        index: item.index,
-        data: JSON.parse(enc),
+    let decryptedParts = []
+
+    for (let ii = 0; ii < encodedParts.length; ii++) {
+      const encPart = encryptedParts[ii]
+
+      for (let ij = 0; ij < splittedDecryptPasswords.length; ij++) {
+        const pass = splittedDecryptPasswords[ij]
+
+        try {
+          const res = await decryptData(encPart.encryptedData, pass)
+          if (res) {
+            decryptedParts.push({
+              index: encPart.index,
+              data: JSON.parse(res),
+            })
+            //delete splittedDecryptPasswords[ij]
+            continue
+          }
+        } catch (e) {
+          console.log({ ii, ij, e })
+        }
       }
-    }))
+    }
+
+    //await Promise.all(encryptedParts.map(async(item) => {
+      //return {
+        //index: item.index,
+        //data: JSON.parse(enc),
+      //}
+    //}))
     console.log({ decryptedParts })
     const restoredParts = shamir.decodeParts(decryptedParts)
     console.log({ restoredParts })
+    const restoredSecret = shamir.join(restoredParts)
 
-    const combinedParts = {
-      1: restoredParts[1],
-      2: restoredParts[2],
-    }
-    console.log({ combinedParts })
-    const restoredSecret = shamir.join(combinedParts)
+    //const combinedParts = {
+      //1: restoredParts[1],
+      //2: restoredParts[2],
+    //}
+    //console.log({ combinedParts })
+    //const restoredSecret = shamir.join(combinedParts)
     console.log({ restoredSecret })
   }
 
@@ -139,9 +167,35 @@ export default function Home() {
           status: { status }
         </p>
 
-        <pre className="bg-gray-200 p-4 overflow-x-scroll max-w-2xl">
-          key: { JSON.stringify(key, null, 2) }
-        </pre>
+        <div>
+          <label htmlFor="">Number of parts</label>
+          <input type="number" value={numParts}
+            onInput={e => setNumParts(e.currentTarget.value)} 
+          />
+        </div>
+
+        <div>
+          <label htmlFor="">Number of quorum</label>
+          <input type="number" value={quorum}
+            onInput={e => setQuorum(e.currentTarget.value)} 
+          />
+        </div>
+
+        <div>
+          <label htmlFor="">List of passwords for encryption</label>
+          <textarea 
+            value={passwords}
+            onInput={e => setPasswords(e.currentTarget.value)} 
+          />
+        </div>
+
+        <div>
+          <label htmlFor="">List of passwords for decryption</label>
+          <textarea 
+            value={decryptPasswords}
+            onInput={e => setDecryptPasswords(e.currentTarget.value)} 
+          />
+        </div>
 
         <button
           type="button"
@@ -149,11 +203,6 @@ export default function Home() {
           className="bg-blue-300 p-4 border rounded hover:bg-blue-500"
         >Generate Keys</button>
       </article>
-
-      <pre className="bg-gray-200 p-4 overflow-x-scroll max-w-2xl">
-      Shards:
-      { shards }
-      </pre>
 
       <article className="p-10 mt-5 bg-blue-200">
         <div>
