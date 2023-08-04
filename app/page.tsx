@@ -51,18 +51,58 @@ export default function Home() {
     setStatus('splitting shards')
     console.log({ privateKey })
 
-    //const secretBytes = encoder.encode(JSON.stringify(privateKey));
-    const secretBytes = encoder.encode('22222');
+    const secretBytes = encoder.encode(JSON.stringify(privateKey));
 
+    /* parts is in this format:
+     *
+     * Object {
+     *  1: Uint8Array[length] number 1,
+     *  2: Uint8Array[length] number 2,
+     *  3: Uint8Array[length] number 3,
+     *  }
+     *
+     * to reconstruct, the parts object must be in the correct key order. example:
+     *
+     * CORRECT:
+     * Object {
+     *  3: Uint8Array[length] number 3,
+     *  2: Uint8Array[length] number 2,
+     * }
+     *
+     * ERROR:
+     * Object {
+     *  1: Uint8Array[length] number 2,
+     *  2: Uint8Array[length] number 3,
+     * }
+     */  
     const parts = shamirSplit(getRandomBytes, 3, 2, secretBytes);
-    console.log({ parts })
-    const partsAsArrays = Object.keys(parts).map(i => Array.from(parts[i])).map(JSON.stringify)
-    setShards(partsAsArrays)
+    const encodedParts = JSON.stringify(parts)
+    console.log({ encodedParts })
+    setShards(encodedParts)
     setStatus('splitting done')
 
-    console.log(partsAsArrays.map(JSON.parse))
-    let combinedParts = {}
-    partsAsArrays.slice(1,3).map(JSON.parse).map(i => Uint8Array.from(i)).forEach((v,k) => combinedParts[k+1] = v)
+    //const immediateParts = {
+      //3: parts[3],
+      //1: parts[1],
+    //}
+    //console.log({ immediateParts })
+    //const immediateResult = (decoder.decode(shamirJoin(immediateParts)))
+    //console.log({ immediateResult })
+
+    /* to restore parts, first decode from JSON. then transform to use:
+     * - convert childs from array-like object into Uint8Array
+     */
+    let restoredParts = JSON.parse(encodedParts) 
+    console.log({ restoredParts })
+    Object.keys(restoredParts).map(
+      key => restoredParts[key] = Uint8Array.from(Object.values(restoredParts[key]))
+    )
+    console.log({ restoredParts })
+
+    const combinedParts = {
+      1: restoredParts[1],
+      2: restoredParts[2],
+    }
     console.log({ combinedParts })
     const restoredSecret = decoder.decode(shamirJoin(combinedParts))
     console.log({ restoredSecret })
@@ -144,11 +184,7 @@ export default function Home() {
       </article>
 
       <p>shards:</p>
-      { shards.map(i => (
-        <pre className="p-10 mt-5 bg-gray-200 overflow-x-scroll max-w-2xl">
-          { i }
-        </pre>
-      )) }
+      { shards }
 
       <p>combined_shards:</p>
       {/*
