@@ -1,6 +1,9 @@
 'use client'
 import { useState } from 'react'
-const { split: shamirSplit, join: shamirJoin } = require('shamir');
+
+import { generateKey } from '../internal/asymmetricCrypto'
+import { encryptData, decryptData } from '../internal/symmetricCrypto'
+import shamir from '../internal/shamirCrypto'
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder()
@@ -9,16 +12,6 @@ const sleep = async (milliseconds: number) => {
   await new Promise(resolve => {
     return setTimeout(resolve, milliseconds)
   });
-};
-
-// adapted from: https://gist.github.com/alexdiliberto/39a4ad0453310d0a69ce
-const getRandomBytes = function(n) {
-  const QUOTA = 65536
-  var a = new Uint8Array(n);
-  for (var i = 0; i < n; i += QUOTA) {
-    crypto.getRandomValues(a.subarray(i, i + Math.min(n - i, QUOTA)));
-  }
-  return a;
 };
 
 export default function Home() {
@@ -33,52 +26,25 @@ export default function Home() {
   const generate = async () => {
     setShards([])
     setStatus('generating...')
-    const res = await crypto.subtle.generateKey(
-      {
-        name: "RSA-OAEP",
-        modulusLength: 4096,
-        publicExponent: new Uint8Array([1, 0, 1]),
-        hash: "SHA-256",
-      },
-      true,
-      ["encrypt", "decrypt"],
-    );
-    setStatus('converting...')
-    const publicKey = await crypto.subtle.exportKey("jwk", res.publicKey);
-    const privateKey = await crypto.subtle.exportKey("jwk", res.privateKey);
+    const { publicKey, privateKey } = await generateKey()
+    setStatus('done...')
     setKey({ publicKey, privateKey })
 
     setStatus('splitting shards')
     console.log({ privateKey })
 
-    const secretBytes = encoder.encode(JSON.stringify(privateKey));
-
-    /* parts is in this format:
-     *
-     * Object {
-     *  1: Uint8Array[length] number 1,
-     *  2: Uint8Array[length] number 2,
-     *  3: Uint8Array[length] number 3,
-     *  }
-     *
-     * to reconstruct, the parts object must be in the correct key order. example:
-     *
-     * CORRECT:
-     * Object {
-     *  3: Uint8Array[length] number 3,
-     *  2: Uint8Array[length] number 2,
-     * }
-     *
-     * ERROR:
-     * Object {
-     *  1: Uint8Array[length] number 2,
-     *  2: Uint8Array[length] number 3,
-     * }
-     */  
-    const parts = shamirSplit(getRandomBytes, 3, 2, secretBytes);
-    const encodedParts = JSON.stringify(parts)
+    const parts = shamir.split(privateKey, 3, 2);
+    const encodedParts = shamir.encodeParts(parts)
     console.log({ encodedParts })
-    setShards(encodedParts)
+    const encryptedParts = await Promise.all(encodedParts.map(async(item) => {
+      const enc = await encryptData(JSON.stringify(item.data), 'password')
+      return {
+        index: item.index,
+        encryptedData: enc,
+      }
+    }))
+    console.log({ encryptedParts })
+    setShards(JSON.stringify(encodedParts, null, 2))
     setStatus('splitting done')
 
     //const immediateParts = {
@@ -89,14 +55,15 @@ export default function Home() {
     //const immediateResult = (decoder.decode(shamirJoin(immediateParts)))
     //console.log({ immediateResult })
 
-    /* to restore parts, first decode from JSON. then transform to use:
-     * - convert childs from array-like object into Uint8Array
-     */
-    let restoredParts = JSON.parse(encodedParts) 
-    console.log({ restoredParts })
-    Object.keys(restoredParts).map(
-      key => restoredParts[key] = Uint8Array.from(Object.values(restoredParts[key]))
-    )
+    const decryptedParts = await Promise.all(encryptedParts.map(async(item) => {
+      const enc = await decryptData(item.encryptedData, 'password')
+      return {
+        index: item.index,
+        data: JSON.parse(enc),
+      }
+    }))
+    console.log({ decryptedParts })
+    const restoredParts = shamir.decodeParts(decryptedParts)
     console.log({ restoredParts })
 
     const combinedParts = {
@@ -104,7 +71,7 @@ export default function Home() {
       2: restoredParts[2],
     }
     console.log({ combinedParts })
-    const restoredSecret = decoder.decode(shamirJoin(combinedParts))
+    const restoredSecret = shamir.join(combinedParts)
     console.log({ restoredSecret })
   }
 
@@ -183,17 +150,10 @@ export default function Home() {
         >Generate Keys</button>
       </article>
 
-      <p>shards:</p>
+      <pre className="bg-gray-200 p-4 overflow-x-scroll max-w-2xl">
+      Shards:
       { shards }
-
-      <p>combined_shards:</p>
-      {/*
-        (shards.length <1) 
-          ? 'empty shards' 
-          : decoder.decode(shamirJoin(
-            Object.assign({}, shards.map(JSON.parse))
-          ))
-      */}
+      </pre>
 
       <article className="p-10 mt-5 bg-blue-200">
         <div>
