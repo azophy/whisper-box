@@ -11,23 +11,22 @@ datasource db {
 }
 
 model Box {
-  id        String     @default(cuid()) @id
+  id         String    @id @default(cuid())
   /// meta information of the box including title, shares, quorum, etc
-  meta     String
+  meta       Json
   /// publicKey in JWK format
-  publicKey     String
+  publicKey  Json
   /// encrypted & sharded privateKey in JWK format
-  privateKey     String
-  createdAt     DateTime  @default(now()) @map(name: "created_at")
-  messages  Message[]
+  privateKey Json
+  createdAt  DateTime  @default(now()) @map(name: "created_at")
+  messages   Message[]
 }
 
-
 model Message {
-  id            String       @default(cuid()) @id
+  id        String   @id @default(cuid())
   /// encrypted message with the box's publicKey
-  content   String?
-  createdAt     DateTime  @default(now()) @map(name: "created_at")
-  box           Box?   @relation(fields: [boxId], references: [id])
-  boxId  String?
+  content   String?  @db.Text
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  box       Box?     @relation(fields: [boxId], references: [id])
+  boxId     String?
 }

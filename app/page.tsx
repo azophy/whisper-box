@@ -71,7 +71,7 @@ export default function Home() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: payload,
-    }).then(r => r.text()).catch(e => e.message())
+    }).then(r => r.text()).catch(e => e.message)
     setPayloadDisplay(resp)
 
     let splittedDecryptPasswords = decryptPasswords.split(',')
