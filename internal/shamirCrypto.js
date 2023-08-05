@@ -30,7 +30,7 @@ export function join(parts) {
 export function encodeParts(parts) {
   return Object.entries(parts).map(
     ([k,v]) => ({
-      index: k,
+      index: Number(k),
       data: Array.from(v),
     })
   )

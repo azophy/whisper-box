@@ -170,14 +170,14 @@ export default function Home() {
         <div>
           <label htmlFor="">Number of parts</label>
           <input type="number" value={numParts}
-            onInput={e => setNumParts(e.currentTarget.value)} 
+            onInput={e => setNumParts(Number(e.currentTarget.value))}
           />
         </div>
 
         <div>
           <label htmlFor="">Number of quorum</label>
           <input type="number" value={quorum}
-            onInput={e => setQuorum(e.currentTarget.value)} 
+            onInput={e => setQuorum(Number(e.currentTarget.value))}
           />
         </div>
 
