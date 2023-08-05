@@ -1,0 +1,33 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Box {
+  id        String     @default(cuid()) @id
+  /// meta information of the box including title, shares, quorum, etc
+  meta     String
+  /// publicKey in JWK format
+  publicKey     String
+  /// encrypted & sharded privateKey in JWK format
+  privateKey     String
+  createdAt     DateTime  @default(now()) @map(name: "created_at")
+  messages  Message[]
+}
+
+
+model Message {
+  id            String       @default(cuid()) @id
+  /// encrypted message with the box's publicKey
+  content   String?
+  createdAt     DateTime  @default(now()) @map(name: "created_at")
+  box           Box?   @relation(fields: [boxId], references: [id])
+  boxId  String?
+}

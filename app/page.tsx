@@ -53,6 +53,23 @@ export default function Home() {
     setShards(JSON.stringify(encodedParts, null, 2))
     setStatus('splitting done')
 
+    const payload = JSON.stringify({
+      meta: {
+        title: 'test box',
+        num_parts: numParts,
+        quorum,
+      },
+      publicKey,
+      privateKey: encryptedParts,
+    })
+    alert(payload)
+
+    fetch('/api/box', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload,
+    }).then(r => r.text()).then(alert);
+
     let splittedDecryptPasswords = decryptPasswords.split(',')
     if (splittedDecryptPasswords.length < quorum) {
       console.log('number of decrypt password is less than required')
