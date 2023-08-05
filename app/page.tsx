@@ -25,6 +25,7 @@ export default function Home() {
   const [decryptPasswords, setDecryptPasswords] = useState('')
   const [numParts, setNumParts] = useState(3)
   const [quorum, setQuorum] = useState(2)
+  const [payloadDisplay, setPayloadDisplay] = useState('')
 
   const isCryptoAvailable = (typeof crypto.subtle !== 'undefined')
 
@@ -39,9 +40,11 @@ export default function Home() {
     console.log({ privateKey, numParts, quorum })
 
     const parts = shamir.split(privateKey, Number(numParts), Number(quorum));
+    setStatus('splitting done')
     const encodedParts = shamir.encodeParts(parts)
     console.log({ encodedParts })
     const splittedPasswords = passwords.split(',')
+    setStatus('encrypting shards')
     const encryptedParts = await Promise.all(encodedParts.map(async(item) => {
       const enc = await encryptData(JSON.stringify(item.data), splittedPasswords[item.index-1])
       return {
@@ -51,7 +54,7 @@ export default function Home() {
     }))
     console.log({ encryptedParts })
     setShards(JSON.stringify(encodedParts, null, 2))
-    setStatus('splitting done')
+    setStatus('done')
 
     const payload = JSON.stringify({
       meta: {
@@ -62,13 +65,14 @@ export default function Home() {
       publicKey,
       privateKey: encryptedParts,
     })
-    alert(payload)
+    setPayloadDisplay(payload)
 
-    fetch('/api/box', {
+    const resp = await fetch('/api/box', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: payload,
-    }).then(r => r.text()).then(alert);
+    }).then(r => r.text()).catch(e => e.message())
+    setPayloadDisplay(resp)
 
     let splittedDecryptPasswords = decryptPasswords.split(',')
     if (splittedDecryptPasswords.length < quorum) {
@@ -188,6 +192,7 @@ export default function Home() {
           <label htmlFor="">Number of parts</label>
           <input type="number" value={numParts}
             onInput={e => setNumParts(Number(e.currentTarget.value))}
+            className="text-black"
           />
         </div>
 
@@ -195,6 +200,7 @@ export default function Home() {
           <label htmlFor="">Number of quorum</label>
           <input type="number" value={quorum}
             onInput={e => setQuorum(Number(e.currentTarget.value))}
+            className="text-black"
           />
         </div>
 
@@ -203,6 +209,7 @@ export default function Home() {
           <textarea 
             value={passwords}
             onInput={e => setPasswords(e.currentTarget.value)} 
+            className="text-black"
           />
         </div>
 
@@ -211,6 +218,7 @@ export default function Home() {
           <textarea 
             value={decryptPasswords}
             onInput={e => setDecryptPasswords(e.currentTarget.value)} 
+            className="text-black"
           />
         </div>
 
@@ -219,6 +227,15 @@ export default function Home() {
           onClick={generate}
           className="bg-blue-300 p-4 border rounded hover:bg-blue-500"
         >Generate Keys</button>
+      </article>
+
+      <article className="p-10 mt-5 bg-blue-200">
+        <pre className="bg-gray-200 p-4 overflow-x-scroll max-w-2xl">
+        Payload:
+        { 
+        payloadDisplay
+        }
+        </pre>
       </article>
 
       <article className="p-10 mt-5 bg-blue-200">
