@@ -14,3 +14,25 @@ export async function generateKey() {
     const privateKey = await crypto.subtle.exportKey("jwk", res.privateKey);
     return { publicKey, privateKey }
 }
+
+export async function encrypt(secret, jwkPublicKey) {
+    const publicKey = await crypto.subtle.importKey(
+      "jwk",
+      jwkPublicKey,
+      {
+        name: "RSA-OAEP",
+        hash: "SHA-256",
+      },
+      true,
+      ["encrypt"],
+    );
+    const cipherText = await crypto.subtle.encrypt(
+      {
+        name: "RSA-OAEP",
+      },
+      publicKey,
+      encoder.encode(origMsg)
+    );
+
+    return cipherText
+}
