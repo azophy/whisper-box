@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import prisma from '../../../internal/prisma'
 
 export default async function Page(
@@ -19,10 +21,10 @@ export default async function Page(
     return (
       <main className="flex min-h-screen flex-col items-center justify-between p-24">
         <nav className="p-10 mt-5 bg-blue-200 text-black">
-          <NextLink
-            to="/"
+          <Link
+            href="/"
             className="text-lg font-bold"
-          >WhisperBox</NextLink>
+          >WhisperBox</Link>
         </nav>
         
         <article className="p-10 mt-5 bg-blue-200 text-black">

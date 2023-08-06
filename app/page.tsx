@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link';
 
 import { generateKey } from '../internal/asymmetricCrypto'
 import { encryptData, decryptData } from '../internal/symmetricCrypto'
@@ -27,6 +28,7 @@ export default function Home() {
   const [numParts, setNumParts] = useState(3)
   const [quorum, setQuorum] = useState(2)
   const [payloadDisplay, setPayloadDisplay] = useState('')
+  const [newBoxId, setNewBoxId] = useState('')
 
   const isCryptoAvailable = (typeof crypto.subtle !== 'undefined')
 
@@ -72,8 +74,10 @@ export default function Home() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: payload,
-    }).then(r => r.text()).catch(e => e.message)
-    setPayloadDisplay(`created with id: ${resp.data.id}`)
+    }).then(r => r.json()).catch(e => e.message)
+    setPayloadDisplay(`created with id: ${resp.id}`)
+    console.log({ id: resp.id, url: location.host + '/box/' + resp.id })
+    setNewBoxId(resp.id)
     setStatus('submited')
 
 /*
@@ -187,7 +191,7 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="p-10 bg-blue-200 w-full max-w-5xl items-center justify-between font-mono text-sm ">
-        <h1 className="text-xl">WhisperBox</h1>
+        <Link href="/" className="text-xl">WhisperBox</Link>
 
         <p className="font-italic">Share secrets safely, easily</p>
       </div>
@@ -238,6 +242,15 @@ export default function Home() {
       </article>
 
       <article className="p-10 mt-5 bg-blue-200">
+        { newBoxId
+          ? <div>
+              New Box created at: 
+              <Link href={'/box/' + newBoxId} className="underline hover:nounderline">
+                { window.location.host + '/box/' + newBoxId }
+              </Link>
+            </div>
+          : ''
+        }
         <pre className="bg-gray-200 p-4 overflow-x-scroll max-w-2xl">
         Payload:
         { 
