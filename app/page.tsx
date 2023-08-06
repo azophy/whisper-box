@@ -47,13 +47,7 @@ export default function Home() {
     const encodedParts = shamir.encodeParts(parts)
     console.log({ encodedParts })
     setStatus('encrypting shards')
-    const encryptedParts = await Promise.all(encodedParts.map(async(item) => {
-      const enc = await encryptData(JSON.stringify(item.data), passwords[item.index-1])
-      return {
-        index: item.index,
-        encryptedData: enc,
-      }
-    }))
+    const encryptedParts = await shamir.encryptParts(encodedParts, passwords)
     console.log({ encryptedParts })
     setShards(JSON.stringify(encodedParts, null, 2))
     setStatus('done')
