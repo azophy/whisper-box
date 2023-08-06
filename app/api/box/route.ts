@@ -5,5 +5,5 @@ export async function POST(req: Request) {
   const data = await req.json()
   const result = await prisma.box.create({ data });
 
-  return NextResponse.json(result)
+  return NextResponse.json({ id: result.id, result })
 }

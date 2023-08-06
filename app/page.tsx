@@ -21,8 +21,9 @@ export default function Home() {
   const [key, setKey] = useState<any>({})
   const [shards, setShards] = useState<any>([])
 
-  const [passwords, setPasswords] = useState('')
-  const [decryptPasswords, setDecryptPasswords] = useState('')
+  const [title, setTitle] = useState('')
+  const [passwords, setPasswords] = useState([])
+  const [inputPassword, setInputPassword] = useState('')
   const [numParts, setNumParts] = useState(3)
   const [quorum, setQuorum] = useState(2)
   const [payloadDisplay, setPayloadDisplay] = useState('')
@@ -43,10 +44,9 @@ export default function Home() {
     setStatus('splitting done')
     const encodedParts = shamir.encodeParts(parts)
     console.log({ encodedParts })
-    const splittedPasswords = passwords.split(',')
     setStatus('encrypting shards')
     const encryptedParts = await Promise.all(encodedParts.map(async(item) => {
-      const enc = await encryptData(JSON.stringify(item.data), splittedPasswords[item.index-1])
+      const enc = await encryptData(JSON.stringify(item.data), passwords[item.index-1])
       return {
         index: item.index,
         encryptedData: enc,
@@ -58,8 +58,8 @@ export default function Home() {
 
     const payload = JSON.stringify({
       meta: {
-        title: 'test box',
-        num_parts: numParts,
+        title,
+        numParts,
         quorum,
       },
       publicKey,
@@ -67,13 +67,16 @@ export default function Home() {
     })
     setPayloadDisplay(payload)
 
+    setStatus('submitting..')
     const resp = await fetch('/api/box', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: payload,
     }).then(r => r.text()).catch(e => e.message)
-    setPayloadDisplay(resp)
+    setPayloadDisplay(`created with id: ${resp.data.id}`)
+    setStatus('submited')
 
+/*
     let splittedDecryptPasswords = decryptPasswords.split(',')
     if (splittedDecryptPasswords.length < quorum) {
       console.log('number of decrypt password is less than required')
@@ -122,6 +125,14 @@ export default function Home() {
     //console.log({ combinedParts })
     //const restoredSecret = shamir.join(combinedParts)
     console.log({ restoredSecret })
+    */
+  }
+
+  const addPassword = function() {
+    const newPasswords = passwords.slice()
+    newPasswords.push(inputPassword)
+    setPasswords(newPasswords)
+    setInputPassword('')
   }
 
   const simulateEncryption = async () => {
@@ -189,15 +200,15 @@ export default function Home() {
         </p>
 
         <div>
-          <label htmlFor="">Number of parts</label>
-          <input type="number" value={numParts}
-            onInput={e => setNumParts(Number(e.currentTarget.value))}
+          <label htmlFor="">Box title</label>
+          <input type="text" value={title}
+            onInput={e => setTitle(e.currentTarget.value)}
             className="text-black"
           />
         </div>
 
         <div>
-          <label htmlFor="">Number of quorum</label>
+          <label htmlFor="">Number of required keys to unlock</label>
           <input type="number" value={quorum}
             onInput={e => setQuorum(Number(e.currentTarget.value))}
             className="text-black"
@@ -205,22 +216,19 @@ export default function Home() {
         </div>
 
         <div>
-          <label htmlFor="">List of passwords for encryption</label>
-          <textarea 
-            value={passwords}
-            onInput={e => setPasswords(e.currentTarget.value)} 
+          <label htmlFor="">Add available passwords here</label>
+          <input type="password" value={inputPassword}
+            onInput={e => setInputPassword(e.currentTarget.value)}
             className="text-black"
           />
+          <button
+            type="button"
+            onClick={addPassword}
+            className="bg-blue-300 p-2 border rounded hover:bg-blue-500"
+          >add</button>
+          <p>There are <strong className="font-bold">{passwords.length} passwords</strong> inserted</p>
         </div>
 
-        <div>
-          <label htmlFor="">List of passwords for decryption</label>
-          <textarea 
-            value={decryptPasswords}
-            onInput={e => setDecryptPasswords(e.currentTarget.value)} 
-            className="text-black"
-          />
-        </div>
 
         <button
           type="button"
