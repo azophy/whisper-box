@@ -1,3 +1,5 @@
+const enc = new TextEncoder();
+const dec = new TextDecoder();
 
 export async function generateKey() {
     const res = await crypto.subtle.generateKey(
@@ -15,7 +17,8 @@ export async function generateKey() {
     return { publicKey, privateKey }
 }
 
-export async function encrypt(secret, jwkPublicKey) {
+/* encrypt using public key in JWK format */
+export async function encrypt(message, jwkPublicKey) {
     const publicKey = await crypto.subtle.importKey(
       "jwk",
       jwkPublicKey,
@@ -31,8 +34,36 @@ export async function encrypt(secret, jwkPublicKey) {
         name: "RSA-OAEP",
       },
       publicKey,
-      encoder.encode(origMsg)
+      enc.encode(message)
     );
 
-    return cipherText
+    return dec.decode(cipherText)
+}
+
+/* decrypt using private key in JWK format */
+export async function decrypt(cipherText, jwkPrivateKey) {
+    const privateKey = await crypto.subtle.importKey(
+      "jwk",
+      jwkPrivateKey,
+      {
+        name: "RSA-OAEP",
+        hash: "SHA-256",
+      },
+      true,
+      ["decrypt"],
+    );
+
+    const result = await crypto.subtle.decrypt(
+      { name: "RSA-OAEP" },
+      privateKey,
+      enc.encode(cipherText),
+    );
+
+    return dec.decode(result)
+}
+
+export default {
+  generateKey,
+  encrypt,
+  decrypt,
 }

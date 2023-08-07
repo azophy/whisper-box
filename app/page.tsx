@@ -227,7 +227,6 @@ export default function Home() {
           <p>There are <strong className="font-bold">{passwords.length} passwords</strong> inserted</p>
         </div>
 
-
         <button
           type="button"
           onClick={generate}
