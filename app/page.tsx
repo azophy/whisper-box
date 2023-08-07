@@ -2,9 +2,9 @@
 import { useState } from 'react'
 import Link from 'next/link';
 
-import { generateKey } from '../internal/asymmetricCrypto'
-import { encryptData, decryptData } from '../internal/symmetricCrypto'
-import shamir from '../internal/shamirCrypto'
+import { generateKey } from '../internal/crypto/asymmetric'
+import { encryptData, decryptData } from '../internal/crypto/symmetric'
+import shamir from '../internal/crypto/shamir'
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder()

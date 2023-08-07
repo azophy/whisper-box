@@ -1,3 +1,5 @@
+import { buff_to_base64, base64_to_buf} from './helper'
+
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
@@ -37,11 +39,12 @@ export async function encrypt(message, jwkPublicKey) {
       enc.encode(message)
     );
 
-    return dec.decode(cipherText)
+    return buff_to_base64(new Uint8Array((cipherText)))
 }
 
 /* decrypt using private key in JWK format */
 export async function decrypt(cipherText, jwkPrivateKey) {
+    const cipherTextBuff = base64_to_buf(cipherText)
     const privateKey = await crypto.subtle.importKey(
       "jwk",
       jwkPrivateKey,
@@ -56,7 +59,7 @@ export async function decrypt(cipherText, jwkPrivateKey) {
     const result = await crypto.subtle.decrypt(
       { name: "RSA-OAEP" },
       privateKey,
-      enc.encode(cipherText),
+      cipherTextBuff,
     );
 
     return dec.decode(result)

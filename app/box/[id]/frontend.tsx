@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link';
 
-import asym from '../../../internal/asymmetricCrypto'
+import asym from '../../../internal/crypto/asymmetric'
 
 export default function FrontendPage({ box }) {
 
