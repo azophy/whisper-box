@@ -110,4 +110,5 @@ export default {
   encodeParts,
   decodeParts,
   encryptParts,
+  decryptParts,
 }

@@ -3,11 +3,15 @@ import { useState } from 'react'
 import Link from 'next/link';
 
 import asym from '../../../internal/crypto/asymmetric'
+import shamir from '../../../internal/crypto/shamir'
 
 export default function FrontendPage({ box }) {
 
     const [submitStatus, setSubmitStatus] = useState('')
     const [newMessage, setNewMessage] = useState('')
+    const [messages, setMessages] = useState(box?.messages.map(item => { ...item, clearContent: ''}))
+    const [privatekey, setPrivateKey] = useState({})
+    const [unlockPasswords, setUnlockPasswords] = useState('')
 
     const title = box?.meta?.title
     const numParts = box?.meta?.numParts
@@ -35,6 +39,11 @@ export default function FrontendPage({ box }) {
       console.log({ resp })
     }
 
+    const unlockPrivateKey = () => {
+      const splittedPasswords = unlockPasswords.split(',')
+      const decryptedParts = shamir.decryptParts(encryptedPrivateKey, splittedPasswords)
+    }
+
     return (
       <main className="flex min-h-screen flex-col items-center justify-between p-24">
         <nav className="p-10 mt-5 bg-blue-200 text-black">
@@ -48,6 +57,19 @@ export default function FrontendPage({ box }) {
           <h1 className="font-bold text-xl">{ title }</h1>
 
           <p>require {quorum} keys of {numParts} to unlock</p>
+
+          { privateKey ? '' : 
+            <>
+              <div>
+                <label htmlFor="">passwords to unlock</label>
+                <input
+                  type="text"
+                  value={unlockPasswords}
+                  onInput={e => setUnlockPasswords(e.currentTarget.value)}
+                />
+              </div>
+            </>
+          }
         </article>
         
         <article className="p-10 mt-5 bg-blue-200 text-black">
@@ -73,9 +95,9 @@ export default function FrontendPage({ box }) {
         </article>
         
         <article className="p-10 mt-5 bg-blue-200 text-black">
-          { box?.messages?.map(msg => (
+          { messages.map(msg => (
             <div className="p-4 mb-2 bg-blue-200">
-              {msg.created_at} - {msg.content}
+              {msg.created_at} - {msg.clearContent ? msg.clearContent : LOCKED}
             </div>
           )) }
         </article>
