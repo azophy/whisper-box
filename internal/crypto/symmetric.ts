@@ -4,12 +4,12 @@ import { buff_to_base64, base64_to_buf} from './helper'
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
-const getPasswordKey = (password) =>
+const getPasswordKey = (password:string) =>
   crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, [
     "deriveKey",
   ]);
 
-const deriveKey = (passwordKey, salt, keyUsage) =>
+const deriveKey = (passwordKey:any, salt:any, keyUsage:any) =>
   crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
@@ -23,7 +23,7 @@ const deriveKey = (passwordKey, salt, keyUsage) =>
     keyUsage
   );
 
-export async function encryptData(secretData, password) {
+export async function encryptData(secretData:string, password:any) {
   try {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -53,7 +53,7 @@ export async function encryptData(secretData, password) {
   }
 }
 
-export async function decryptData(encryptedData, password) {
+export async function decryptData(encryptedData:any, password:any) {
   try {
     const encryptedDataBuff = base64_to_buf(encryptedData);
     const salt = encryptedDataBuff.slice(0, 16);

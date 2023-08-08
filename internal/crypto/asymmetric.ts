@@ -20,7 +20,7 @@ export async function generateKey() {
 }
 
 /* encrypt using public key in JWK format */
-export async function encrypt(message, jwkPublicKey) {
+export async function encrypt(message:string, jwkPublicKey:any) {
     const publicKey = await crypto.subtle.importKey(
       "jwk",
       jwkPublicKey,
@@ -43,7 +43,7 @@ export async function encrypt(message, jwkPublicKey) {
 }
 
 /* decrypt using private key in JWK format */
-export async function decrypt(cipherText, jwkPrivateKey) {
+export async function decrypt(cipherText:string, jwkPrivateKey:any) {
     const cipherTextBuff = base64_to_buf(cipherText)
     const privateKey = await crypto.subtle.importKey(
       "jwk",

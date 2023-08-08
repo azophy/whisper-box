@@ -5,7 +5,7 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder()
 
 // adapted from: https://gist.github.com/alexdiliberto/39a4ad0453310d0a69ce
-const getRandomBytes = function(n) {
+const getRandomBytes = function(n:number) {
   const QUOTA = 65536
   var a = new Uint8Array(n);
   for (var i = 0; i < n; i += QUOTA) {
@@ -14,12 +14,12 @@ const getRandomBytes = function(n) {
   return a;
 };
 
-export function split(secret, num_parts, quorum) {
+export function split(secret:any, num_parts:number, quorum:number) {
     const secretBytes = encoder.encode(JSON.stringify(secret));
     return shamirSplit(getRandomBytes, num_parts, quorum, secretBytes);
 }
 
-export function join(parts) {
+export function join(parts:any) {
   return decoder.decode(shamirJoin(parts))
 }
 
@@ -28,7 +28,7 @@ export function join(parts) {
  *    index: int, // to recostruct the parts
  *    data: array, // parts data in regular array format
 */ 
-export function encodeParts(parts) {
+export function encodeParts(parts:any) {
   return Object.entries(parts).map(
     ([k,v]) => ({
       index: Number(k),
@@ -60,8 +60,7 @@ export function encodeParts(parts) {
  *  2: Uint8Array[length] number 3,
  * }
  */  
-export function decodeParts(parts) {
-  console.log({ parts_in_decode: parts })
+export function decodeParts(parts:any) {
   return Object.fromEntries(parts.map(item => [
     item.index,
     Uint8Array.from(item.data)
@@ -69,7 +68,7 @@ export function decodeParts(parts) {
 }
 
 /* Encrypt parts using symmetric decryption */
-export async function encryptParts(encodedParts, passwords) {
+export async function encryptParts(encodedParts:any, passwords:string[]) {
     const encryptedParts = await Promise.all(encodedParts.map(async(item) => {
       const enc = await encryptData(JSON.stringify(item.data), passwords[item.index-1])
       return {
@@ -81,7 +80,7 @@ export async function encryptParts(encodedParts, passwords) {
 }
 
 /* Decrypt parts using symmetric decryption */
-export async function decryptParts(encryptedParts, passwords) {
+export async function decryptParts(encryptedParts:any, passwords:string[]) {
     let decryptedParts = []
 
     for (let ii = 0; ii < encryptedParts.length; ii++) {

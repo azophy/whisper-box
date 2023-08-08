@@ -23,7 +23,7 @@ export default function Home() {
   const [shards, setShards] = useState<any>([])
 
   const [title, setTitle] = useState('')
-  const [passwords, setPasswords] = useState([])
+  const [passwords, setPasswords] = useState<string[]>([])
   const [inputPassword, setInputPassword] = useState('')
   const [numParts, setNumParts] = useState(3)
   const [quorum, setQuorum] = useState(2)
@@ -76,7 +76,7 @@ export default function Home() {
   }
 
   const addPassword = function() {
-    const newPasswords = passwords.slice()
+    let newPasswords: string[] = passwords.slice()
     newPasswords.push(inputPassword)
     setPasswords(newPasswords)
     setInputPassword('')

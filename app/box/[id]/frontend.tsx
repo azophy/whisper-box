@@ -5,7 +5,7 @@ import Link from 'next/link';
 import asym from '../../../internal/crypto/asymmetric'
 import shamir from '../../../internal/crypto/shamir'
 
-function MessageRow({ message, privateKey}) {
+function MessageRow({ message, privateKey}: { message:any,  privateKey:any }) {
     const [clearContent, setClearContent] = useState('')
 
     const show = async () => {
@@ -35,13 +35,13 @@ function MessageRow({ message, privateKey}) {
     )
 }
 
-export default function FrontendPage({ box }) {
+export default function FrontendPage({ box }: { box:any }) {
 
     const [submitStatus, setSubmitStatus] = useState('')
     const [newMessage, setNewMessage] = useState('')
     const [privateKey, setPrivateKey] = useState<any>(null)
     const [inputPassword, setInputPassword] = useState('')
-    const [unlockPasswords, setUnlockPasswords] = useState([])
+    const [unlockPasswords, setUnlockPasswords] = useState<string[]>([])
 
     const title = box?.meta?.title
     const numParts = box?.meta?.numParts
@@ -61,7 +61,7 @@ export default function FrontendPage({ box }) {
           boxId: box.id,
           content: encMessage,
         }),
-      }).then(r => r.json()).catch(e => e.message)
+      }).then(r => r.json()).catch((e:any) => e.message)
 
       setSubmitStatus('done...')
       setNewMessage('')
@@ -74,7 +74,7 @@ export default function FrontendPage({ box }) {
     }
 
     const addUnlockPassword = () => {
-        const newPass = unlockPasswords.slice()
+        let newPass: string[] = unlockPasswords.slice()
         newPass.push(inputPassword)
         setInputPassword('')
         setUnlockPasswords(newPass)
@@ -91,7 +91,7 @@ export default function FrontendPage({ box }) {
         const restoredSecret = shamir.join(restoredParts)
         setPrivateKey(JSON.parse(restoredSecret))
         setSubmitStatus('done')
-      } catch (e) {
+      } catch (e: any) {
         setSubmitStatus('error: ' + e.message + e.stack)
       }7
     }
@@ -158,8 +158,8 @@ export default function FrontendPage({ box }) {
           <textarea 
             value={newMessage}
             onInput={e => setNewMessage(e.currentTarget.value)}
-            row="5"
-            col="30"
+            rows={5}
+            cols={30}
           />
 
           <button
@@ -170,7 +170,7 @@ export default function FrontendPage({ box }) {
         </article>
         
         <article className="p-2 mt-5 bg-gray-200 text-black">
-          { box?.messages?.map(msg => (
+          { box?.messages?.map((msg:any) => (
             <MessageRow
               message={msg}
               privateKey={privateKey}
