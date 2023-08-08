@@ -1,4 +1,5 @@
 const { split: shamirSplit, join: shamirJoin } = require('shamir');
+import { encryptData, decryptData } from './symmetric'
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder()
@@ -60,10 +61,50 @@ export function encodeParts(parts) {
  * }
  */  
 export function decodeParts(parts) {
+  console.log({ parts_in_decode: parts })
   return Object.fromEntries(parts.map(item => [
     item.index,
     Uint8Array.from(item.data)
   ]))
+}
+
+/* Encrypt parts using symmetric decryption */
+export async function encryptParts(encodedParts, passwords) {
+    const encryptedParts = await Promise.all(encodedParts.map(async(item) => {
+      const enc = await encryptData(JSON.stringify(item.data), passwords[item.index-1])
+      return {
+        index: item.index,
+        encryptedData: enc,
+      }
+    }))
+    return encryptedParts
+}
+
+/* Decrypt parts using symmetric decryption */
+export async function decryptParts(encryptedParts, passwords) {
+    let decryptedParts = []
+
+    for (let ii = 0; ii < encryptedParts.length; ii++) {
+      const encPart = encryptedParts[ii]
+
+      for (let ij = 0; ij < passwords.length; ij++) {
+        try {
+          const res = await decryptData(encPart.encryptedData, passwords[ij])
+          if (res) {
+            decryptedParts.push({
+              index: encPart.index,
+              data: JSON.parse(res),
+            })
+            //delete splittedDecryptPasswords[ij]
+            continue
+          }
+        } catch (e) {
+          console.log({ ii, ij, e })
+        }
+      }
+    }
+
+    return decryptedParts
 }
 
 export default {
@@ -71,4 +112,6 @@ export default {
   join,
   encodeParts,
   decodeParts,
+  encryptParts,
+  decryptParts,
 }

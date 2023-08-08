@@ -1,0 +1,37 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  // url      = env("DATABASE_URL")
+
+  // vercel's settings
+  url               = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl         = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  shadowDatabaseUrl = env("POSTGRES_URL_NON_POOLING") // used for migrations
+}
+
+model Box {
+  id         String    @id @default(cuid())
+  /// meta information of the box including title, shares, quorum, etc
+  meta       Json
+  /// publicKey in JWK format
+  publicKey  Json
+  /// encrypted & sharded privateKey in JWK format
+  privateKey Json
+  createdAt  DateTime  @default(now()) @map(name: "created_at")
+  messages   Message[]
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  /// encrypted message with the box's publicKey
+  content   String?  @db.Text
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  box       Box?     @relation(fields: [boxId], references: [id])
+  boxId     String?
+}
