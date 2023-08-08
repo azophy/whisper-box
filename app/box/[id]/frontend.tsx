@@ -5,22 +5,31 @@ import Link from 'next/link';
 import asym from '../../../internal/crypto/asymmetric'
 import shamir from '../../../internal/crypto/shamir'
 
-function MessageRow({ created_at, content, privateKey}) {
+function MessageRow({ message, privateKey}) {
     const [clearContent, setClearContent] = useState('')
 
-    const unlock = async () => {
-      const decMessage = await asym.decrypt(content, privateKey)
+    const show = async () => {
+      const decMessage = await asym.decrypt(message.content, privateKey)
       setClearContent(decMessage)
     }
 
+    const hide = async () => {
+      setClearContent('')
+    }
+
     return (
-        <div className="p-4 mb-2 bg-blue-200">
-          {created_at} - {
-            clearContent ?
-            clearContent :
-            privateKey ?
-              <button className="bg-blue-200 border rounded p-2" onClick={unlock} type="button">show</button> :
-              'LOCKED'
+        <div className="p-2 mb-4 bg-blue-200">
+          {message.createdAt.toLocaleString('id-ID')} - {
+            !privateKey
+            ? 'LOCKED'
+            : clearContent
+              ? <div>
+                {clearContent}
+                <button className="bg-blue-200 border rounded p-2" onClick={hide} type="button">hide</button>
+              </div>
+              : <button className="bg-blue-200 border rounded p-2" onClick={show} type="button">
+                show
+              </button>
            }
         </div>
     )
@@ -31,14 +40,14 @@ export default function FrontendPage({ box }) {
     const [submitStatus, setSubmitStatus] = useState('')
     const [newMessage, setNewMessage] = useState('')
     const [privateKey, setPrivateKey] = useState<any>(null)
-    const [unlockPasswords, setUnlockPasswords] = useState('')
+    const [inputPassword, setInputPassword] = useState('')
+    const [unlockPasswords, setUnlockPasswords] = useState([])
 
     const title = box?.meta?.title
     const numParts = box?.meta?.numParts
     const quorum = box?.meta?.quorum
     const publicKey = box?.publicKey
     const encryptedPrivateKey = box?.privateKey
-    console.log({ encryptedPrivateKey })
 
     const submitMessage = async () => {
       setSubmitStatus('encrypting...')
@@ -58,24 +67,33 @@ export default function FrontendPage({ box }) {
       setNewMessage('')
 
       location.reload()
-
-      console.log({ resp })
     }
 
     const lockPrivateKey = () => {
       setPrivateKey(null)
     }
 
+    const addUnlockPassword = () => {
+        const newPass = unlockPasswords.slice()
+        newPass.push(inputPassword)
+        setInputPassword('')
+        setUnlockPasswords(newPass)
+    }
+
     const unlockPrivateKey = async () => {
+      setSubmitStatus('unlocking box...')
       try {
-        const splittedPasswords = unlockPasswords.split(',')
-        const decryptedParts = await shamir.decryptParts(encryptedPrivateKey, splittedPasswords)
+        setSubmitStatus('decrypting keys...')
+        const decryptedParts = await shamir.decryptParts(encryptedPrivateKey, unlockPasswords)
+        setUnlockPasswords([])
         const restoredParts = shamir.decodeParts(decryptedParts)
+        setSubmitStatus('rebuilding keys...')
         const restoredSecret = shamir.join(restoredParts)
-        setPrivateKey(JSON.parse(restoredParts))
+        setPrivateKey(JSON.parse(restoredSecret))
+        setSubmitStatus('done')
       } catch (e) {
-        console.log({ encountered_error: e })
-      }
+        setSubmitStatus('error: ' + e.message + e.stack)
+      }7
     }
 
     return (
@@ -85,6 +103,12 @@ export default function FrontendPage({ box }) {
             href="/"
             className="text-lg font-bold"
           >WhisperBox</Link>
+
+          { submitStatus
+            ? <div className="mt-4 font-italic p-2 bg-gray-200">{submitStatus}</div>
+            : ''
+          }
+
         </nav>
         
         <article className="p-10 mt-5 bg-blue-200 text-black">
@@ -105,11 +129,19 @@ export default function FrontendPage({ box }) {
               <div>
                 <label htmlFor="">passwords to unlock</label>
                 <input
-                  type="text"
-                  value={unlockPasswords}
-                  onInput={e => setUnlockPasswords(e.currentTarget.value)}
+                  type="password"
+                  value={inputPassword}
+                  onInput={e => setInputPassword(e.currentTarget.value)}
                 />
 
+                <p>there are <span className="font-bold">{unlockPasswords.length}</span> keys inserted</p>
+
+                <button
+                  onClick={addUnlockPassword}
+                  className="bg-blue-300 p-4 border rounded hover:bg-blue-500"
+                >
+                  add passwords
+                </button>
                 <button
                   onClick={unlockPrivateKey}
                   className="bg-blue-300 p-4 border rounded hover:bg-blue-500"
@@ -122,11 +154,6 @@ export default function FrontendPage({ box }) {
         
         <article className="p-10 mt-5 bg-blue-200 text-black">
           <h2 className="font-bold text-lg">Submit new message</h2>
-
-          { submitStatus
-            ? <div className="font-italic p-2 bg-gray-200">{submitStatus}</div>
-            : ''
-          }
 
           <textarea 
             value={newMessage}
@@ -142,11 +169,10 @@ export default function FrontendPage({ box }) {
           >Submit</button>
         </article>
         
-        <article className="p-10 mt-5 bg-blue-200 text-black">
+        <article className="p-2 mt-5 bg-gray-200 text-black">
           { box?.messages?.map(msg => (
             <MessageRow
-              created_at={msg.created_at}
-              content={msg.content}
+              message={msg}
               privateKey={privateKey}
               key={msg.id}
             />

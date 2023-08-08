@@ -103,6 +103,8 @@ export async function decryptParts(encryptedParts, passwords) {
         }
       }
     }
+
+    return decryptedParts
 }
 
 export default {

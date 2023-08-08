@@ -73,57 +73,6 @@ export default function Home() {
     console.log({ id: resp.id, url: location.host + '/box/' + resp.id })
     setNewBoxId(resp.id)
     setStatus('submited')
-
-/*
-    let splittedDecryptPasswords = decryptPasswords.split(',')
-    if (splittedDecryptPasswords.length < quorum) {
-      console.log('number of decrypt password is less than required')
-      return
-    }
-
-    let decryptedParts = []
-
-    for (let ii = 0; ii < encodedParts.length; ii++) {
-      const encPart = encryptedParts[ii]
-
-      for (let ij = 0; ij < splittedDecryptPasswords.length; ij++) {
-        const pass = splittedDecryptPasswords[ij]
-
-        try {
-          const res = await decryptData(encPart.encryptedData, pass)
-          if (res) {
-            decryptedParts.push({
-              index: encPart.index,
-              data: JSON.parse(res),
-            })
-            //delete splittedDecryptPasswords[ij]
-            continue
-          }
-        } catch (e) {
-          console.log({ ii, ij, e })
-        }
-      }
-    }
-
-    //await Promise.all(encryptedParts.map(async(item) => {
-      //return {
-        //index: item.index,
-        //data: JSON.parse(enc),
-      //}
-    //}))
-    console.log({ decryptedParts })
-    const restoredParts = shamir.decodeParts(decryptedParts)
-    console.log({ restoredParts })
-    const restoredSecret = shamir.join(restoredParts)
-
-    //const combinedParts = {
-      //1: restoredParts[1],
-      //2: restoredParts[2],
-    //}
-    //console.log({ combinedParts })
-    //const restoredSecret = shamir.join(combinedParts)
-    console.log({ restoredSecret })
-    */
   }
 
   const addPassword = function() {
@@ -131,55 +80,6 @@ export default function Home() {
     newPasswords.push(inputPassword)
     setPasswords(newPasswords)
     setInputPassword('')
-  }
-
-  const simulateEncryption = async () => {
-    const publicKey = await crypto.subtle.importKey(
-      "jwk",
-      key.publicKey,
-      {
-        name: "RSA-OAEP",
-        hash: "SHA-256",
-      },
-      true,
-      ["encrypt"],
-    );
-
-    const privateKey = await crypto.subtle.importKey(
-      "jwk",
-      key.privateKey,
-      {
-        name: "RSA-OAEP",
-        hash: "SHA-256",
-      },
-      true,
-      ["decrypt"],
-    );
-
-    setStatus('encrypting...')
-    let msg = `original Message: ${origMsg}`
-
-    const cipherText = await crypto.subtle.encrypt(
-        {
-          name: "RSA-OAEP",
-        },
-        publicKey,
-        encoder.encode(origMsg)
-      );
-
-    //const decodedChiperText = btoa(cipherText)
-    msg += "\nencryption result: " + decoder.decode(cipherText)
-
-    setStatus('decrypting...')
-    
-    const decryptRes = await crypto.subtle.decrypt(
-      { name: "RSA-OAEP" },
-      privateKey,
-      cipherText,
-    );
-    msg += "\ndecryption result: " + decoder.decode(decryptRes)
-
-    setEncryptionMessage(msg)
   }
 
   return (
@@ -247,39 +147,8 @@ export default function Home() {
             </div>
           : ''
         }
-        <pre className="bg-gray-200 p-4 overflow-x-scroll max-w-2xl">
-        Payload:
-        { 
-        payloadDisplay
-        }
-        </pre>
       </article>
 
-      <article className="p-10 mt-5 bg-blue-200">
-        <div>
-          <label>
-            Message: 
-          </label>
-          <input
-            type="text"
-            value={origMsg}
-            onInput={e => setOrigMsg(e.currentTarget.value)} 
-          />
-        </div>
-
-        <pre className="bg-gray-200 p-4 overflow-x-scroll max-w-2xl">
-          Encryption Message:
-          { encryptionMessage }
-        </pre>
-
-        <button
-          type="button"
-          onClick={simulateEncryption}
-          className="bg-blue-300 p-4 border rounded hover:bg-blue-500"
-        >
-          Simulate encryption
-        </button>
-      </article>
     </main>
   )
 }
