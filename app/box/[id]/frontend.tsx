@@ -16,8 +16,8 @@ function MessageRow({ created_at, content, privateKey}) {
     return (
         <div className="p-4 mb-2 bg-blue-200">
           {created_at} - {
-            msg.clearContent ?
-            msg.clearContent :
+            clearContent ?
+            clearContent :
             privateKey ?
               <button className="bg-blue-200 border rounded p-2" onClick={unlock} type="button">show</button> :
               'LOCKED'
@@ -30,7 +30,7 @@ export default function FrontendPage({ box }) {
 
     const [submitStatus, setSubmitStatus] = useState('')
     const [newMessage, setNewMessage] = useState('')
-    const [privateKey, setPrivateKey] = useState({})
+    const [privateKey, setPrivateKey] = useState<any>(null)
     const [unlockPasswords, setUnlockPasswords] = useState('')
 
     const title = box?.meta?.title
@@ -61,6 +61,10 @@ export default function FrontendPage({ box }) {
       console.log({ resp })
     }
 
+    const lockPrivateKey = () => {
+      setPrivateKey(null)
+    }
+
     const unlockPrivateKey = () => {
       const splittedPasswords = unlockPasswords.split(',')
       const decryptedParts = shamir.decryptParts(encryptedPrivateKey, splittedPasswords)
@@ -83,8 +87,16 @@ export default function FrontendPage({ box }) {
 
           <p>require {quorum} keys of {numParts} to unlock</p>
 
-          { privateKey ? '' : 
-            <>
+          { privateKey ? 
+              <div>
+                <button
+                  onClick={lockPrivateKey}
+                  className="bg-blue-300 p-4 border rounded hover:bg-blue-500"
+                >
+                  lock box
+                </button>
+              </div>
+          : 
               <div>
                 <label htmlFor="">passwords to unlock</label>
                 <input
@@ -100,7 +112,6 @@ export default function FrontendPage({ box }) {
                   unlock box
                 </button>
               </div>
-            </>
           }
         </article>
         
