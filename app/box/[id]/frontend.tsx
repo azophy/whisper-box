@@ -5,12 +5,32 @@ import Link from 'next/link';
 import asym from '../../../internal/crypto/asymmetric'
 import shamir from '../../../internal/crypto/shamir'
 
+function MessageRow({ created_at, content, privateKey}) {
+    const [clearContent, setClearContent] = useState('')
+
+    const unlock = async () => {
+      const decMessage = await asym.decrypt(content, privateKey)
+      setClearContent(decMessage)
+    }
+
+    return (
+        <div className="p-4 mb-2 bg-blue-200">
+          {created_at} - {
+            msg.clearContent ?
+            msg.clearContent :
+            privateKey ?
+              <button className="bg-blue-200 border rounded p-2" onClick={unlock} type="button">show</button> :
+              'LOCKED'
+           }
+        </div>
+    )
+}
+
 export default function FrontendPage({ box }) {
 
     const [submitStatus, setSubmitStatus] = useState('')
     const [newMessage, setNewMessage] = useState('')
-    const [messages, setMessages] = useState(box?.messages.map(item => { ...item, clearContent: ''}))
-    const [privatekey, setPrivateKey] = useState({})
+    const [privateKey, setPrivateKey] = useState({})
     const [unlockPasswords, setUnlockPasswords] = useState('')
 
     const title = box?.meta?.title
@@ -36,12 +56,17 @@ export default function FrontendPage({ box }) {
       setSubmitStatus('done...')
       setNewMessage('')
 
+      location.reload()
+
       console.log({ resp })
     }
 
     const unlockPrivateKey = () => {
       const splittedPasswords = unlockPasswords.split(',')
       const decryptedParts = shamir.decryptParts(encryptedPrivateKey, splittedPasswords)
+      const restoredParts = shamir.decodeParts(decryptedParts)
+      const restoredSecret = shamir.join(restoredParts)
+      setPrivateKey(JSON.parse(restoredParts))
     }
 
     return (
@@ -67,6 +92,13 @@ export default function FrontendPage({ box }) {
                   value={unlockPasswords}
                   onInput={e => setUnlockPasswords(e.currentTarget.value)}
                 />
+
+                <button
+                  onClick={unlockPrivateKey}
+                  className="bg-blue-300 p-4 border rounded hover:bg-blue-500"
+                >
+                  unlock box
+                </button>
               </div>
             </>
           }
@@ -95,10 +127,12 @@ export default function FrontendPage({ box }) {
         </article>
         
         <article className="p-10 mt-5 bg-blue-200 text-black">
-          { messages.map(msg => (
-            <div className="p-4 mb-2 bg-blue-200">
-              {msg.created_at} - {msg.clearContent ? msg.clearContent : LOCKED}
-            </div>
+          { box?.messages?.map(msg => (
+            <MessageRow
+              created_at={msg.created_at}
+              content={msg.content}
+              privateKey={privateKey}
+            />
           )) }
         </article>
       </main>

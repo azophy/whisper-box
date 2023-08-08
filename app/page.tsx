@@ -190,7 +190,8 @@ export default function Home() {
         <p className="font-italic">Share secrets safely, easily</p>
       </div>
 
-      <article className="p-10 mt-5 bg-blue-200">
+      <article className="p-10 mt-5 bg-blue-200 text-black">
+        <h2 className="text-lg font-bold">Create new box</h2>
         <p>crypto is { isCryptoAvailable ? 'AVAILABLE' : 'NOT AVAILABLE' }</p>
 
         <p>
@@ -231,7 +232,9 @@ export default function Home() {
           type="button"
           onClick={generate}
           className="bg-blue-300 p-4 border rounded hover:bg-blue-500"
-        >Generate Keys</button>
+        >
+          Create Box
+        </button>
       </article>
 
       <article className="p-10 mt-5 bg-blue-200">

@@ -1,5 +1,5 @@
 const { split: shamirSplit, join: shamirJoin } = require('shamir');
-import { encryptData, decryptData } from './symmetricCrypto'
+import { encryptData, decryptData } from './symmetric'
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder()
@@ -68,7 +68,7 @@ export function decodeParts(parts) {
 }
 
 /* Encrypt parts using symmetric decryption */
-export async function encryptParts(encodeParts, passwords) {
+export async function encryptParts(encodedParts, passwords) {
     const encryptedParts = await Promise.all(encodedParts.map(async(item) => {
       const enc = await encryptData(JSON.stringify(item.data), passwords[item.index-1])
       return {
