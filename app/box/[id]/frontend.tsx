@@ -36,8 +36,9 @@ export default function FrontendPage({ box }) {
     const title = box?.meta?.title
     const numParts = box?.meta?.numParts
     const quorum = box?.meta?.quorum
-    const publicKey = box?.meta?.publicKey
-    const encryptedPrivateKey = box?.meta?.privateKey
+    const publicKey = box?.publicKey
+    const encryptedPrivateKey = box?.privateKey
+    console.log({ encryptedPrivateKey })
 
     const submitMessage = async () => {
       setSubmitStatus('encrypting...')
@@ -65,12 +66,16 @@ export default function FrontendPage({ box }) {
       setPrivateKey(null)
     }
 
-    const unlockPrivateKey = () => {
-      const splittedPasswords = unlockPasswords.split(',')
-      const decryptedParts = shamir.decryptParts(encryptedPrivateKey, splittedPasswords)
-      const restoredParts = shamir.decodeParts(decryptedParts)
-      const restoredSecret = shamir.join(restoredParts)
-      setPrivateKey(JSON.parse(restoredParts))
+    const unlockPrivateKey = async () => {
+      try {
+        const splittedPasswords = unlockPasswords.split(',')
+        const decryptedParts = await shamir.decryptParts(encryptedPrivateKey, splittedPasswords)
+        const restoredParts = shamir.decodeParts(decryptedParts)
+        const restoredSecret = shamir.join(restoredParts)
+        setPrivateKey(JSON.parse(restoredParts))
+      } catch (e) {
+        console.log({ encountered_error: e })
+      }
     }
 
     return (
@@ -143,6 +148,7 @@ export default function FrontendPage({ box }) {
               created_at={msg.created_at}
               content={msg.content}
               privateKey={privateKey}
+              key={msg.id}
             />
           )) }
         </article>

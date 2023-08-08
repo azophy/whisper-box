@@ -61,6 +61,7 @@ export function encodeParts(parts) {
  * }
  */  
 export function decodeParts(parts) {
+  console.log({ parts_in_decode: parts })
   return Object.fromEntries(parts.map(item => [
     item.index,
     Uint8Array.from(item.data)
