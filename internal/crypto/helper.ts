@@ -6,5 +6,5 @@ export const buff_to_base64 = (buff:any) => btoa(
 );
 
 export const base64_to_buf = (b64:string) =>
-  Uint8Array.from(atob(b64), (c) => c.charCodeAt(null));
+  Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 

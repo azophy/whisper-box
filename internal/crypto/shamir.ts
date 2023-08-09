@@ -30,7 +30,7 @@ export function join(parts:any) {
 */ 
 export function encodeParts(parts:any) {
   return Object.entries(parts).map(
-    ([k,v]) => ({
+    ([k,v]:any) => ({
       index: Number(k),
       data: Array.from(v),
     })
@@ -61,7 +61,7 @@ export function encodeParts(parts:any) {
  * }
  */  
 export function decodeParts(parts:any) {
-  return Object.fromEntries(parts.map(item => [
+  return Object.fromEntries(parts.map((item:any) => [
     item.index,
     Uint8Array.from(item.data)
   ]))
@@ -69,7 +69,7 @@ export function decodeParts(parts:any) {
 
 /* Encrypt parts using symmetric decryption */
 export async function encryptParts(encodedParts:any, passwords:string[]) {
-    const encryptedParts = await Promise.all(encodedParts.map(async(item) => {
+    const encryptedParts = await Promise.all(encodedParts.map(async(item:any) => {
       const enc = await encryptData(JSON.stringify(item.data), passwords[item.index-1])
       return {
         index: item.index,
