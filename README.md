@@ -1,34 +1,31 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+Whisper Box
+===========
+
+This is a simple webapp for sharing secret texts, where everyone could submit messages to be encrypted but only selected passphrase holders with predefined schema that could decrypt it.
+
+## Tech stack
+- NextJs
+- TailwindCSS
+- PostgreSQL
+- shamir NPM Package
+- Web Crypto API
 
 ## Getting Started
 
-First, run the development server:
-
+1. Clone this repo, prepare PostgreSQL database
+2. Copy `.env.example` to `.env`, then edit accordingly
+3. Run following commands:
 ```bash
+npm install
+npx prisma migrate dev
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Technical Design
+This project utilized symmetric encryption, asymmetric encryption, and shamir secret sharing
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+1. Symmetric encryption used so everyone could encrypt messages using public key, and then submit it
+2. Shamir secret sharing used to split the private key generated above into several "shards", allowing the messages to be decrypted only if it fullfil the predefined sharing schema
+3. symmetric encryption (with authentication) uses to encrypt the shards with passwords by each keyholders
