@@ -26,6 +26,6 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ## Technical Design
 This project utilized symmetric encryption, asymmetric encryption, and shamir secret sharing
 
-1. Symmetric encryption used so everyone could encrypt messages using public key, and then submit it
+1. Asymmetric encryption used so everyone could encrypt messages using public key, and then submit it
 2. Shamir secret sharing used to split the private key generated above into several "shards", allowing the messages to be decrypted only if it fullfil the predefined sharing schema
-3. symmetric encryption (with authentication) uses to encrypt the shards with passwords by each keyholders
+3. symmetric encryption (with authentication) used to encrypt the shards with passwords by each keyholders
